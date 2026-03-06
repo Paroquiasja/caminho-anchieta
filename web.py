@@ -117,6 +117,7 @@ def init_db():
 init_db()
 
 
+
 # ---------------- APRENDIZADO ----------------
 
 def registrar_aprendizado(pergunta):
@@ -283,6 +284,30 @@ def backup_arquivo(caminho):
             conteudo = f.read()
         with open(nome_backup, "w", encoding="utf-8") as b:
             b.write(conteudo)
+
+def backup_banco():
+
+    try:
+
+        os.makedirs("backups", exist_ok=True)
+
+        hoje = datetime.now().strftime("%Y-%m-%d")
+
+        origem = DB_PATH
+        destino = f"backups/paroquia_{hoje}.db"
+
+        if os.path.exists(origem):
+
+            import shutil
+            shutil.copy2(origem, destino)
+
+    except Exception as e:
+        print("Erro backup:", e)
+
+
+# cria backup ao iniciar sistema
+
+backup_banco()
 
 # ---------- Base ----------
 
@@ -996,6 +1021,12 @@ body { margin:0; font-family: Arial, sans-serif; background:#0b2a4a; }
         <h3>🚪 Logout</h3>
         <p>Encerrar sessão.</p>
         <a href="/logout">Sair</a>
+    </div>
+
+    <div class="card">
+       <h3>💾 Backup</h3>
+       <p>Salvar cópia do banco.</p>
+       <a href="/admin/backup">Executar</a>
     </div>
 
     {% if perfil == "admin" %}
@@ -2522,6 +2553,19 @@ font-weight:bold;
 </body>
 </html>
 """, perguntas=perguntas)
+
+@app.route("/admin/backup")
+def admin_backup():
+
+    if not session.get("logado"):
+        return redirect(url_for("login"))
+
+    if not tem_nivel("admin"):
+        return "Apenas admin pode fazer backup."
+
+    backup_banco()
+
+    return "Backup criado com sucesso!"
 
 # ---------- Run ----------
 if __name__ == "__main__":
